@@ -10,9 +10,12 @@ public class MusicTuner : MonoBehaviour, IMusicTuner
     [SerializeField] private float _musicDelay;
     [SerializeField] private AudioSource _ambientSource;
     [SerializeField] private AudioSource _musicSource;
+    [SerializeField] private List<AudioClip> _ambients;
     [SerializeField] private List<AudioClip> _musics;
 
-    private List<AudioClip> _remainingSongs = new List<AudioClip>();
+    private List<AudioClip> _remainingAmbients = new List<AudioClip>();
+    private List<AudioClip> _remainingMusics = new List<AudioClip>();
+
     private float _startAmbientVolume;
     private float _startMusicVolume;
 
@@ -42,6 +45,7 @@ public class MusicTuner : MonoBehaviour, IMusicTuner
     private IEnumerator MusicCycle() {
         _ambientSource.volume = 0;
         _musicSource.volume = 0;
+        SetRandomAmbient();
         _ambientSource.Play();
         while(true) {
             yield return StartCoroutine(SmoothTransit(_ambientSource, _startAmbientVolume));
@@ -53,19 +57,47 @@ public class MusicTuner : MonoBehaviour, IMusicTuner
             yield return new WaitUntil(() => _musicSource.time == 0);
             _musicSource.Stop();
             _musicSource.volume = 0f;
+            TryChangeAmbient();
             _ambientSource.UnPause();
         }
     }
 
     private void SetRandomMusic() {
-        if(_remainingSongs.Count == 0) {
-            foreach(var clip in _musics) {
-                _remainingSongs.Add(clip);
+        if(_remainingMusics.Count == 0) {
+            _remainingMusics = GetCopy(_musics);
+        }
+        var currentClip = ChooseRandom(_musics);
+        _musicSource.clip = currentClip;
+        _remainingAmbients.Remove(currentClip);
+    }
+
+    private void TryChangeAmbient() {
+        if(_ambientSource.clip.length - _ambientSource.time < _musicDelay) {
+            SetRandomAmbient();
+        }
+    }
+
+    private void SetRandomAmbient() {
+        if(_remainingAmbients.Count == 0) {
+            _remainingAmbients = GetCopy(_ambients);
+        }
+        var currentClip = ChooseRandom(_remainingAmbients);
+        _ambientSource.clip = currentClip;
+        _remainingAmbients.Remove(currentClip);
+    }
+
+    private List<T> GetCopy<T>(List<T> list) {
+        var copied = new List<T>();
+        if(_remainingAmbients.Count == 0) {
+            foreach(var item in list) {
+                copied.Add(item);
             }
         }
-        var currentClip = _remainingSongs[Random.Range(0, _remainingSongs.Count - 1)];
-        _musicSource.clip = currentClip;
-        _remainingSongs.Remove(currentClip);
+        return copied;
+    }
+
+    private T ChooseRandom<T>(List<T> list) {
+        return list[Random.Range(0, _remainingAmbients.Count - 1)];
     }
 
     private IEnumerator SmoothSwitch(AudioSource from, AudioSource to, float targetVolume) {
