@@ -19,8 +19,11 @@ public class MusicTuner : MonoBehaviour, IMusicTuner
     private float _startAmbientVolume;
     private float _startMusicVolume;
 
+    private bool _ambientWasPlaying = false;
+
     public void StopMusic() {
         StopAllCoroutines();
+        _ambientWasPlaying = _ambientSource.isPlaying;
         _musicSource.Stop();
         _ambientSource.Stop();
     }
@@ -32,7 +35,9 @@ public class MusicTuner : MonoBehaviour, IMusicTuner
 
     public void UnpauseMusic() {
         _musicSource.UnPause();
-        _ambientSource.UnPause();
+        if(_ambientWasPlaying) {
+            _ambientSource.UnPause();
+        }
     }
 
     private void Start()
