@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Mathematics;
+using Unity.VisualScripting;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -23,12 +24,12 @@ public class MusicTuner : MonoBehaviour, IMusicTuner
 
     public void StopMusic() {
         StopAllCoroutines();
-        _ambientWasPlaying = _ambientSource.isPlaying;
         _musicSource.Stop();
         _ambientSource.Stop();
     }
 
     public void PauseMusic() {
+        _ambientWasPlaying = _ambientSource.isPlaying;
         _musicSource.Pause();
         _ambientSource.Pause();
     }
